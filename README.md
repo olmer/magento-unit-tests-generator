@@ -1,5 +1,5 @@
 # magento-unit-tests-generator
-Sometimes writing new unit test for class with multiple dependencies may be tedious, so this package is intended to simplify magento2 unit tests creation. Command reads source file and generate basic unit test structure for specified class. If unit test already exists for specific class - nothing happens. Test class is placed into test object class module under app/code/Vendor/Module/Test/Unit/...
+Sometimes writing new unit test for class with multiple dependencies may be tedious, so this package is intended to simplify magento2 unit tests creation. Command reads source file and generate basic unit test structure for specified class. If unit test already exists - nothing will happen. Test class is placed into test object class' module under app/code/Vendor/Module/Test/Unit/...
 
 ### How to install
 
