@@ -51,7 +51,7 @@ class Generator
         include $path;
 
         $diff = \array_diff(get_declared_classes(), $classes);
-        $sourceClass = \reset($diff);
+        $sourceClass = \end($diff);
 
         $resultClass = \explode('\\', $sourceClass);
         \array_splice($resultClass, 2, 0, 'Test\\Unit');
