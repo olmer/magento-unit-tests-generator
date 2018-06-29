@@ -4,7 +4,7 @@ Sometimes writing new unit test for class with multiple dependencies may be tedi
 ### How to install
 
 ```bash
-composer require olmer/magento-unit-tests-generator:^0.2 --dev
+composer require olmer/magento-unit-tests-generator:^0.3 --dev
 php bin/magento cache:clean
 php bin/magento setup:di:compile
 ```
