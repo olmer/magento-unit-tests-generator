@@ -1,0 +1,321 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vaimo\UnitTestsGenerator\Code\Generator;
+
+class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
+{
+    /**
+     * Entity type
+     */
+    const ENTITY_TYPE = 'unitTest';
+    /**
+     * @var \ReflectionClass
+     */
+    private $sourceReflectionClass;
+    /**
+     * @var array
+     */
+    private $constructorParams;
+
+    /**
+     * @return bool
+     */
+    protected function _validateData()
+    {
+        if (\class_exists($this->_getResultClassName())) {
+            return false;
+        }
+        return parent::_validateData();
+    }
+
+    /**
+     * @return array
+     */
+    protected function _getClassDocBlock()
+    {
+        $description = '@covers ' . $this->getSourceClassName();
+        return ['shortDescription' => $description];
+    }
+
+    /**
+     * @return \ReflectionClass
+     * @throws \ReflectionException
+     */
+    private function getSourceReflectionClass(): \ReflectionClass
+    {
+        if ($this->sourceReflectionClass === null) {
+            $this->sourceReflectionClass = new \ReflectionClass($this->getSourceClassName());
+        }
+        return $this->sourceReflectionClass;
+    }
+
+    /**
+     * Retrieve class properties
+     *
+     * @return array
+     */
+    protected function _getClassProperties()
+    {
+        $properties = array_map(function($e) {
+            return [
+                'name' => $e['name'],
+                'visibility' => 'private',
+                'docblock' => [
+                    'shortDescription' => 'Mock ' . $e['name'],
+                    'tags' => [['name' => 'var', 'description' => '\\' . $e['class'] . '|PHPUnit_Framework_MockObject_MockObject']],
+                ],
+            ];
+        }, $this->getConstructorArguments());
+
+        $properties[] = [
+            'name' => 'objectManager',
+            'visibility' => 'private',
+            'docblock' => [
+                'shortDescription' => 'Object Manager instance',
+                'tags' => [['name' => 'var', 'description' => '\\' . \Magento\Framework\ObjectManagerInterface::class]],
+            ],
+        ];
+
+        $properties[] = [
+            'name' => 'testObject',
+            'visibility' => 'private',
+            'docblock' => [
+                'shortDescription' => 'Object to test',
+                'tags' => [['name' => 'var', 'description' => $this->getSourceClassName()]],
+            ],
+        ];
+
+        return $properties;
+    }
+
+    /**
+     * Get default constructor definition for generated class
+     *
+     * @return array
+     */
+    protected function _getDefaultConstructorDefinition()
+    {
+        return [];
+    }
+
+    /**
+     * Returns list of methods for class generator
+     *
+     * @return array
+     */
+    protected function _getClassMethods()
+    {
+        $setUp = [
+            'name' => 'setUp',
+            'parameters' => [],
+            'body' => "\$this->objectManager = new ObjectManager(\$this);\n"
+                . \implode("\n", $this->getSetupMethodParamsDefinition()) . "\n"
+                . $this->getTestObjectCreation(),
+            'docblock' => [
+                'shortDescription' => 'Main set up method',
+            ],
+        ];
+
+        return \array_merge([$setUp], $this->getTestMethodsWithProviders());
+    }
+
+    /**
+     * @return string
+     */
+    protected function _generateCode()
+    {
+        $this->addDefaultUses();
+        $this->addExtends();
+
+        return parent::_generateCode();
+    }
+
+    /**
+     * @return array
+     */
+    private function getSetupMethodParamsDefinition(): array
+    {
+        return \array_map(function ($e) {
+            return "\$this->" . $e['name']
+                . " = \$this->createMock(\\" . $e['class'] . "::class);";
+        }, $this->getConstructorArguments());
+    }
+
+    /**
+     * @return string
+     */
+    private function getTestObjectCreation(): string
+    {
+        return "\$this->testObject = \$this->objectManager->getObject(\n"
+            . $this->getSourceClassName() . "::class,\n"
+            . "    [\n"
+            . \implode("\n", $this->getObjectCreationParams())
+            . "\n    ]\n"
+            . ");";
+    }
+
+    /**
+     * @return array
+     */
+    private function getObjectCreationParams(): array
+    {
+        return \array_map(function ($e) {
+            return "        '" . $e['name'] . "' => \$this->" . $e['name'] . ",";
+        }, $this->getConstructorArguments());
+    }
+
+    /**
+     * @param string $className
+     *
+     * @return array
+     */
+    private function getConstructorArguments(): array
+    {
+        if ($this->constructorParams === null) {
+            $this->constructorParams = [];
+
+            try {
+                $method = $this->getSourceReflectionClass()->getMethod('__construct');
+                foreach ($method->getParameters() as $parameter) {
+                    if (!$parameter->getClass()) {
+                        continue;
+                    }
+                    $this->constructorParams[] = [
+                        'name' => $parameter->getName(),
+                        'class' => $parameter->getClass()->getName()
+                    ];
+                }
+            } catch (\ReflectionException $e) {
+                return $this->constructorParams;
+            }
+        }
+
+        return $this->constructorParams;
+    }
+
+    /**
+     * @return array
+     */
+    private function getTestMethodsWithProviders(): array
+    {
+        $methods = [];
+        try {
+            $publicMethods = $this->getSourceReflectionClass()->getMethods(\ReflectionMethod::IS_PUBLIC);
+            foreach ($publicMethods as $method) {
+                if (!($method->isConstructor() || $method->isFinal() || $method->isStatic() || $method->isDestructor())
+                    && !in_array($method->getName(), ['__sleep', '__wakeup', '__clone'])
+                ) {
+                    $methods[] = $this->getDataProviderInfo($method);
+                    $methods[] = $this->getMethodInfo($method);
+                }
+            }
+        } catch (\ReflectionException $e) {
+            return $methods;
+        }
+
+        return $methods;
+    }
+
+    /**
+     * Retrieve method info
+     *
+     * @param \ReflectionMethod $method
+     * @return array
+     */
+    private function getMethodInfo(\ReflectionMethod $method)
+    {
+        $testMethodName = 'test' . \ucfirst($method->getName());
+        $methodInfo = [
+            'name' => $testMethodName,
+            'parameters' => [
+                [
+                    'name' => 'prerequisites',
+                    'type' => 'array',
+                ],
+                [
+                    'name' => 'expectedResult',
+                    'type' => 'array',
+                ],
+            ],
+            'body' => "\$this->assertEquals(\$expectedResult['param'], \$prerequisites['param']);",
+            'docblock' => [
+                'tags' => [['name' => 'dataProvider', 'description' => 'dataProviderFor' . \ucfirst($testMethodName)]],
+            ],
+        ];
+
+        return $methodInfo;
+    }
+
+    /**
+     * Retrieve method info
+     *
+     * @param \ReflectionMethod $method
+     * @return array
+     */
+    private function getDataProviderInfo(\ReflectionMethod $method): array
+    {
+        $testMethodName = 'test' . \ucfirst($method->getName());
+        $methodInfo = [
+            'name' => 'dataProviderFor' . \ucfirst($testMethodName),
+            'body' => $this->getDataProviderBody(),
+            'docblock' => [
+                'tags' => [['name' => 'return', 'description' => 'array']],
+            ],
+        ];
+
+        return $methodInfo;
+    }
+
+    /**
+     * @return string
+     */
+    private function getDataProviderBody(): string
+    {
+        return <<<BODY
+return [
+    'Testcase 1' => [
+        'prerequisites' => ['param' => 1],
+        'expectedResult' => ['param' => 1]
+    ]
+];
+BODY;
+    }
+
+    /**
+     * add uses, which are needed for unit testing
+     */
+    private function addDefaultUses()
+    {
+        $this->_classGenerator->addUse(
+            \Magento\Framework\TestFramework\Unit\Helper\ObjectManager::class
+        );
+        $this->_classGenerator->addUse(
+            \PHPUnit\Framework\TestCase::class
+        );
+        $this->_classGenerator->addUse(
+            \PHPUnit_Framework_MockObject_MockObject::class
+        );
+    }
+
+    /**
+     * add extends from testcase class
+     */
+    private function addExtends()
+    {
+        $this->_classGenerator->setExtendedClass(\PHPUnit\Framework\TestCase::class);
+    }
+
+    /**
+     * @param string $sourceCode
+     *
+     * @return string
+     */
+    protected function _fixCodeStyle($sourceCode)
+    {
+        $sourceCode = parent::_fixCodeStyle($sourceCode);
+        $sourceCode = preg_replace('/(\sprivate\s\$\w+)\s\=\snull\;/', '$1;', $sourceCode);
+        return $sourceCode;
+    }
+}

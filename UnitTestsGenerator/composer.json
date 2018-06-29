@@ -1,0 +1,23 @@
+{
+    "name": "olmer/magento-unit-tests-generator",
+    "type": "magento2-module",
+    "description": "Unit Tests Generator",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Igor Tripolskiy",
+            "email": "olmer.tripolskiy@gmail.com"
+        }
+    ],
+    "require": {
+        "magento/framework": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Olmer\\UnitTestsGenerator\\": ""
+        }
+    }
+}

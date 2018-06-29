@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2009-2018 Vaimo AB. All rights reserved.
+ * See LICENSE.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="m2_unit_tests_generator" xsi:type="object">Vaimo\UnitTestsGenerator\Console\Command\Generate</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Vaimo\UnitTestsGenerator\VirtualType\Io" type="Magento\Framework\Code\Generator\Io">
+        <arguments>
+            <argument name="generationDirectory" xsi:type="string">app/code</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Vaimo\UnitTestsGenerator\Code\Generator">
+        <arguments>
+            <argument name="ioObject" xsi:type="object">Vaimo\UnitTestsGenerator\VirtualType\Io</argument>
+        </arguments>
+    </type>
+
+</config>
