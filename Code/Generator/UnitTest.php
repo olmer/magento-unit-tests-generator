@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaimo\UnitTestsGenerator\Code\Generator;
+namespace Olmer\UnitTestsGenerator\Code\Generator;
 
 class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
 {

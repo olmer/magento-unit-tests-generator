@@ -1,8 +1,7 @@
 {
     "name": "olmer/magento-unit-tests-generator",
-    "type": "magento2-module",
     "description": "Unit Tests Generator",
-    "license": "proprietary",
+    "license": "MIT",
     "authors": [
         {
             "name": "Igor Tripolskiy",
@@ -10,7 +9,11 @@
         }
     ],
     "require": {
-        "magento/framework": "*"
+        "magento/framework": "*",
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.0"
     },
     "autoload": {
         "files": [

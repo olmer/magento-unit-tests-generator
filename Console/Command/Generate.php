@@ -1,12 +1,7 @@
 <?php
-/**
- * Copyright © 2009-2018 Vaimo Group. All rights reserved.
- * See LICENSE.txt for license details.
- */
-
 declare(strict_types=1);
 
-namespace Vaimo\UnitTestsGenerator\Console\Command;
+namespace Olmer\UnitTestsGenerator\Console\Command;
 
 use Symfony\Component\Console\{
     Command\Command,
@@ -26,7 +21,7 @@ use Magento\Framework\{
 use Magento\Backend\App\Area\FrontNameResolver;
 use Magento\Store\Model\StoreManager;
 
-use Vaimo\UnitTestsGenerator\Code\Generator;
+use Olmer\UnitTestsGenerator\Code\Generator;
 
 class Generate extends Command
 {

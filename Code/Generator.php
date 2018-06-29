@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vaimo\UnitTestsGenerator\Code;
+namespace Olmer\UnitTestsGenerator\Code;
 
 use Magento\Framework\{
     Filesystem\Driver\File,
