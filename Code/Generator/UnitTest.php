@@ -17,27 +17,7 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
     /**
      * @var array
      */
-    private $constructorParams;
-
-    /**
-     * @return bool
-     */
-    protected function _validateData()
-    {
-        if (\class_exists($this->_getResultClassName())) {
-            return false;
-        }
-        return parent::_validateData();
-    }
-
-    /**
-     * @return array
-     */
-    protected function _getClassDocBlock()
-    {
-        $description = '@covers ' . $this->getSourceClassName();
-        return ['shortDescription' => $description];
-    }
+    private $constructorArguments;
 
     /**
      * @return \ReflectionClass
@@ -49,6 +29,15 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
             $this->sourceReflectionClass = new \ReflectionClass($this->getSourceClassName());
         }
         return $this->sourceReflectionClass;
+    }
+
+    /**
+     * @return array
+     */
+    protected function _getClassDocBlock()
+    {
+        $description = '@covers ' . $this->getSourceClassName();
+        return ['shortDescription' => $description];
     }
 
     /**
@@ -173,8 +162,8 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
      */
     private function getConstructorArguments(): array
     {
-        if ($this->constructorParams === null) {
-            $this->constructorParams = [];
+        if ($this->constructorArguments === null) {
+            $this->constructorArguments = [];
 
             try {
                 $method = $this->getSourceReflectionClass()->getMethod('__construct');
@@ -182,17 +171,17 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
                     if (!$parameter->getClass()) {
                         continue;
                     }
-                    $this->constructorParams[] = [
+                    $this->constructorArguments[] = [
                         'name' => $parameter->getName(),
                         'class' => $parameter->getClass()->getName()
                     ];
                 }
             } catch (\ReflectionException $e) {
-                return $this->constructorParams;
+                return $this->constructorArguments;
             }
         }
 
-        return $this->constructorParams;
+        return $this->constructorArguments;
     }
 
     /**
@@ -207,8 +196,8 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
                 if (!($method->isConstructor() || $method->isFinal() || $method->isStatic() || $method->isDestructor())
                     && !in_array($method->getName(), ['__sleep', '__wakeup', '__clone'])
                 ) {
-                    $methods[] = $this->getDataProviderInfo($method);
-                    $methods[] = $this->getMethodInfo($method);
+                    $methods[] = $this->getDataProvider($method);
+                    $methods[] = $this->getTestMethod($method);
                 }
             }
         } catch (\ReflectionException $e) {
@@ -224,7 +213,7 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
      * @param \ReflectionMethod $method
      * @return array
      */
-    private function getMethodInfo(\ReflectionMethod $method)
+    private function getTestMethod(\ReflectionMethod $method)
     {
         $testMethodName = 'test' . \ucfirst($method->getName());
         $methodInfo = [
@@ -254,7 +243,7 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
      * @param \ReflectionMethod $method
      * @return array
      */
-    private function getDataProviderInfo(\ReflectionMethod $method): array
+    private function getDataProvider(\ReflectionMethod $method): array
     {
         $testMethodName = 'test' . \ucfirst($method->getName());
         $methodInfo = [

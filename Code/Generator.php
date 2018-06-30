@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Olmer\UnitTestsGenerator\Code;
 
-use Magento\Framework\{
-    Filesystem\Driver\File,
-    Code\Generator\Io
-};
+use Magento\Framework\Code\Generator\Io;
 
 class Generator
 {
@@ -15,10 +12,6 @@ class Generator
      * @var Generator\UnitTestFactory
      */
     private $testGeneratorFactory;
-    /**
-     * @var File
-     */
-    private $driver;
     /**
      * @var \Magento\Framework\Code\Generator\Io
      */
@@ -28,14 +21,13 @@ class Generator
      * Generator constructor.
      *
      * @param Generator\UnitTestFactory $testGenerator
+     * @param Io $ioObject
      */
     public function __construct(
         Generator\UnitTestFactory $testGenerator,
-        File $driver,
         Io $ioObject
     ) {
         $this->testGeneratorFactory = $testGenerator;
-        $this->driver = $driver;
         $this->ioObject = $ioObject;
     }
 

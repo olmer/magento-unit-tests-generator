@@ -43,8 +43,8 @@ class Generate extends Command
      */
     public function __construct(ObjectManagerFactory $objectManagerFactory)
     {
-        $this->objectManagerFactory = $objectManagerFactory;
         parent::__construct(null);
+        $this->objectManagerFactory = $objectManagerFactory;
     }
 
     /**
