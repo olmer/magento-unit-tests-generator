@@ -73,14 +73,17 @@ class Generate extends Command
         try {
             $path = $input->getArgument(static::ARGUMENT_PATH);
             $result = $this->getModel()->process($path);
+            if ($result) {
+                $output->writeln('<info>Unit tests generated</info>');
+                $output->writeln("<info>$result</info>");
+            } else {
+                $output->writeln('<info>No tests to generate</info>');
+            }
         } catch (\Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
 
             return Cli::RETURN_FAILURE;
         }
-
-        $output->writeln('<info>Unit tests generated</info>');
-        $output->writeln("<info>$result</info>");
 
         return Cli::RETURN_SUCCESS;
     }

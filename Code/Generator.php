@@ -40,12 +40,12 @@ class Generator
     {
         $classes = \get_declared_classes();
 
-        include $path;
+        require_once $path;
 
         $diff = \array_diff(get_declared_classes(), $classes);
-        $sourceClass = \end($diff);
+        $sourceClass = \end($diff) ?: '';
 
-        $resultClass = \explode('\\', $sourceClass);
+        $resultClass = \explode('\\', trim($sourceClass, '\\'));
         \array_splice($resultClass, 2, 0, 'Test\\Unit');
         $resultClass = \implode('\\', $resultClass) . 'Test';
 
