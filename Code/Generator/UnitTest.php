@@ -52,11 +52,11 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
                 'name' => $e['name'],
                 'visibility' => 'private',
                 'docblock' => [
-                    'shortDescription' => 'Mock ' . $e['name'],
-                    'tags' => [['name' => 'var', 'description' => '\\' . $e['class'] . '|PHPUnit_Framework_MockObject_MockObject']],
+                    'shortDescription' => "Mock {$e['name']}",
+                    'tags' => [['name' => 'var', 'description' => '\\' . "{$e['class']}|PHPUnit_Framework_MockObject_MockObject"]],
                 ],
             ];
-        }, $this->getConstructorArguments());
+        }, $this->getConstructorArgumentsWithFactoryInstances());
 
         $properties[] = [
             'name' => 'objectManager',
@@ -126,10 +126,18 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
      */
     private function getSetupMethodParamsDefinition(): array
     {
-        return \array_map(function ($e) {
-            return "\$this->" . $e['name']
-                . " = \$this->createMock(\\" . $e['class'] . "::class);";
-        }, $this->getConstructorArguments());
+        $result = [];
+        foreach ($this->getConstructorArgumentsWithFactoryInstances() as $argument) {
+            $result[] = "\$this->{$argument['name']}"
+                . " = \$this->createMock(\\" . "{$argument['class']}::class);";
+            if (\preg_match('/\w+Factory$/', $argument['class']) === 1) {
+                $instanceName = $argument['name'] . 'Instance';
+                $result[] = "\$this->{$argument['name']}"
+                    . "->method('create')"
+                    . "->willReturn(\$this->$instanceName);";
+            }
+        }
+        return $result;
     }
 
     /**
@@ -151,7 +159,7 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
     private function getObjectCreationParams(): array
     {
         return \array_map(function ($e) {
-            return "        '" . $e['name'] . "' => \$this->" . $e['name'] . ",";
+            return "        '{$e['name']}' => \$this->{$e['name']},";
         }, $this->getConstructorArguments());
     }
 
@@ -182,6 +190,25 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
         }
 
         return $this->constructorArguments;
+    }
+
+    /**
+     * @return array
+     */
+    private function getConstructorArgumentsWithFactoryInstances(): array
+    {
+        $result = [];
+        $arguments = $this->getConstructorArguments();
+        foreach ($arguments as $argument) {
+            if (\preg_match('/\w+Factory$/', $argument['class']) === 1) {
+                $result[] = [
+                    'name' => $argument['name'] . 'Instance',
+                    'class' => \substr($argument['class'], 0, -7)
+                ];
+            }
+            $result[] = $argument;
+        }
+        return $result;
     }
 
     /**

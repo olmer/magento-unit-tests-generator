@@ -12,9 +12,6 @@
         "magento/framework": "*",
         "php": "^7.0"
     },
-    "require-dev": {
-        "phpunit/phpunit": "^6.0"
-    },
     "autoload": {
         "files": [
             "registration.php"
