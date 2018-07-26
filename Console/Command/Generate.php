@@ -58,7 +58,7 @@ class Generate extends Command
         $this->addArgument(
             self::ARGUMENT_PATH,
             InputArgument::REQUIRED,
-            'Path to file to generate unit tests for'
+            'Class name or path to file to generate unit tests for'
         );
     }
 
