@@ -20,7 +20,8 @@ class ClassNameParser
         for (; $i < $tokensCount; $i++) {
             if ($tokens[$i][0] === T_NAMESPACE) {
                 for ($j = $i + 1; $j < $tokensCount; $j++) {
-                    if ($tokens[$j][0] === T_STRING) {
+                    // T_NAME_QUALIFIED for PHP > 8.0, T_STRING as fallback
+                    if ($tokens[$j][0] === T_NAME_QUALIFIED || $tokens[$j][0] === T_STRING) {
                         $namespace .= '\\' . $tokens[$j][1];
                     } else {
                         if ($tokens[$j] === '{' || $tokens[$j] === ';') {
