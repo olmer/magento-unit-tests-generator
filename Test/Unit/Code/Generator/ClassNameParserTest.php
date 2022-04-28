@@ -3,7 +3,6 @@ namespace Olmer\UnitTestsGenerator\Test\Unit\Code\Generator;
 
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * @covers \Olmer\UnitTestsGenerator\Code\Generator\ClassNameParser
