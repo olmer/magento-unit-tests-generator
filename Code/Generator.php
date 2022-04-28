@@ -8,6 +8,7 @@ use Magento\Framework\{
     Code\Generator\Io,
     Filesystem\Driver\File as Reader
 };
+use Olmer\UnitTestsGenerator\Code\Generator\ClassNameParser;
 
 class Generator
 {
@@ -23,6 +24,10 @@ class Generator
      * @var Reader
      */
     private $reader;
+    /**
+     * @var ClassNameParser
+     */
+    private $classNameParser;
 
     /**
      * Generator constructor.
@@ -34,11 +39,13 @@ class Generator
     public function __construct(
         Generator\UnitTestFactory $testGenerator,
         Io $ioObject,
-        Reader $reader
+        Reader $reader,
+        ClassNameParser $classNameParser
     ) {
         $this->testGeneratorFactory = $testGenerator;
         $this->ioObject = $ioObject;
         $this->reader = $reader;
+        $this->classNameParser = $classNameParser;
     }
 
     /**
@@ -81,41 +88,6 @@ class Generator
         }
 
         $fileContents = $this->reader->fileGetContents($path);
-        return $this->parseClassName($fileContents);
-    }
-
-    /**
-     * @param string $content
-     *
-     * @return string
-     */
-    private function parseClassName(string $content): string
-    {
-        $class = $namespace = '';
-        $i = 0;
-        $tokens = \token_get_all($content);
-        $tokensCount = \count($tokens);
-        for (; $i < $tokensCount; $i++) {
-            if ($tokens[$i][0] === T_NAMESPACE) {
-                for ($j = $i + 1; $j < $tokensCount; $j++) {
-                    if ($tokens[$j][0] === T_STRING) {
-                        $namespace .= '\\' . $tokens[$j][1];
-                    } else {
-                        if ($tokens[$j] === '{' || $tokens[$j] === ';') {
-                            break;
-                        }
-                    }
-                }
-            }
-            if ($tokens[$i][0] === T_CLASS) {
-                for ($j = $i + 1; $j < $tokensCount; $j++) {
-                    if ($tokens[$j] === '{') {
-                        $class = '\\' . $tokens[$i + 2][1];
-                        break 2;
-                    }
-                }
-            }
-        }
-        return $namespace . $class;
+        return $this->classNameParser->parseClassName($fileContents);
     }
 }
