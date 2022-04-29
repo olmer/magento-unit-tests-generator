@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Olmer\UnitTestsGenerator\Code\Generator;
 
+use Magento\Framework\Code\Generator\DefinedClasses;
+use Magento\Framework\Code\Generator\Io;
+use \Magento\Framework\Code\Generator\CodeGeneratorInterface;
+use Olmer\UnitTestsGenerator\Code\Generator\UnitTest\ConstructorArgumentsResolver;
+
 class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
 {
     /**
@@ -18,6 +23,21 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
      * @var array
      */
     private $constructorArguments;
+
+    /** @var ConstructorArgumentsResolver */
+    private $constructorArgumentsResolver;
+
+    public function __construct(
+        ConstructorArgumentsResolver $constructorArgumentsResolver,
+        $sourceClassName = null,
+        $resultClassName = null,
+        Io $ioObject = null,
+        CodeGeneratorInterface $classGenerator = null,
+        DefinedClasses $definedClasses = null
+    ) {
+        $this->constructorArgumentsResolver = $constructorArgumentsResolver;
+        parent::__construct($sourceClassName, $resultClassName, $ioObject, $classGenerator, $definedClasses);
+    }
 
     /**
      * @return \ReflectionClass
@@ -164,28 +184,17 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
     }
 
     /**
-     * @param string $className
-     *
      * @return array
      */
     private function getConstructorArguments(): array
     {
         if ($this->constructorArguments === null) {
-            $this->constructorArguments = [];
-
             try {
-                $method = $this->getSourceReflectionClass()->getMethod('__construct');
-                foreach ($method->getParameters() as $parameter) {
-                    if (!$parameter->getClass()) {
-                        continue;
-                    }
-                    $this->constructorArguments[] = [
-                        'name' => $parameter->getName(),
-                        'class' => $parameter->getClass()->getName()
-                    ];
-                }
+                $this->constructorArguments = $this->constructorArgumentsResolver->resolve(
+                    $this->getSourceReflectionClass()
+                );
             } catch (\ReflectionException $e) {
-                return $this->constructorArguments;
+                $this->constructorArguments = [];
             }
         }
 
