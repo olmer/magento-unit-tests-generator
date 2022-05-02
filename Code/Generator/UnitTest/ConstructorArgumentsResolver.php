@@ -7,17 +7,16 @@ namespace Olmer\UnitTestsGenerator\Code\Generator\UnitTest;
 class ConstructorArgumentsResolver
 {
     /**
-     * @param \ReflectionClass $reflectionClass
+     * @param \ReflectionMethod $constructor
      *
      * @return array
      */
-    public function resolve(\ReflectionClass $reflectionClass): array
+    public function resolve(\ReflectionMethod $constructor): array
     {
         $constructorArguments = [];
 
         try {
-            $method = $reflectionClass->getMethod('__construct');
-            foreach ($method->getParameters() as $parameter) {
+            foreach ($constructor->getParameters() as $parameter) {
                 if (!$parameter->getClass()) {
                     continue;
                 }

@@ -190,9 +190,8 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
     {
         if ($this->constructorArguments === null) {
             try {
-                $this->constructorArguments = $this->constructorArgumentsResolver->resolve(
-                    $this->getSourceReflectionClass()
-                );
+                $constructor = $this->getSourceReflectionClass()->getMethod('__construct');
+                $this->constructorArguments = $this->constructorArgumentsResolver->resolve($constructor);
             } catch (\ReflectionException $e) {
                 $this->constructorArguments = [];
             }
