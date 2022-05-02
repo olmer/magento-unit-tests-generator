@@ -21,7 +21,8 @@ class ClassNameParser
             if ($tokens[$i][0] === T_NAMESPACE) {
                 for ($j = $i + 1; $j < $tokensCount; $j++) {
                     // T_NAME_QUALIFIED for PHP > 8.0, T_STRING as fallback
-                    if ($tokens[$j][0] === T_NAME_QUALIFIED || $tokens[$j][0] === T_STRING) {
+                    $qualifiedNameToken = defined('T_NAME_QUALIFIED') ? T_NAME_QUALIFIED : T_STRING;
+                    if ($tokens[$j][0] === $qualifiedNameToken) {
                         $namespace .= '\\' . $tokens[$j][1];
                     } else {
                         if ($tokens[$j] === '{' || $tokens[$j] === ';') {
