@@ -62,7 +62,7 @@ namespace Vendor\Reorder\Test\Unit\Helper;
 
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\TestCase;
-use PHPUnit_Framework_MockObject_MockObject;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * @covers \Vendor\Reorder\Helper\Reorder
@@ -72,49 +72,49 @@ class ReorderTest extends TestCase
     /**
      * Mock context
      *
-     * @var \Magento\Framework\App\Helper\Context|PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Framework\App\Helper\Context|PHPUnit\Framework\MockObject\MockObject
      */
     private $context;
 
     /**
      * Mock orderRepository
      *
-     * @var \Magento\Sales\Api\OrderRepositoryInterface|PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Sales\Api\OrderRepositoryInterface|PHPUnit\Framework\MockObject\MockObject
      */
     private $orderRepository;
 
     /**
      * Mock criteria
      *
-     * @var \Magento\Framework\Api\SearchCriteriaFactory|PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Framework\Api\SearchCriteriaFactory|PHPUnit\Framework\MockObject\MockObject
      */
     private $criteria;
 
     /**
      * Mock filterGroup
      *
-     * @var \Magento\Framework\Api\Search\FilterGroupFactory|PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Framework\Api\Search\FilterGroupFactory|PHPUnit\Framework\MockObject\MockObject
      */
     private $filterGroup;
 
     /**
      * Mock filter
      *
-     * @var \Magento\Framework\Api\FilterFactory|PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Framework\Api\FilterFactory|PHPUnit\Framework\MockObject\MockObject
      */
     private $filter;
 
     /**
      * Mock orderFactory
      *
-     * @var \Magento\Sales\Model\OrderFactory|PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Sales\Model\OrderFactory|PHPUnit\Framework\MockObject\MockObject
      */
     private $orderFactory;
 
     /**
      * Mock sortOrderFactory
      *
-     * @var \Magento\Framework\Api\SortOrderFactory|PHPUnit_Framework_MockObject_MockObject
+     * @var \Magento\Framework\Api\SortOrderFactory|PHPUnit\Framework\MockObject\MockObject
      */
     private $sortOrderFactory;
 
@@ -135,7 +135,7 @@ class ReorderTest extends TestCase
     /**
      * Main set up method
      */
-    public function setUp()
+    public function setUp() : void
     {
         $this->objectManager = new ObjectManager($this);
         $this->context = $this->createMock(\Magento\Framework\App\Helper\Context::class);
