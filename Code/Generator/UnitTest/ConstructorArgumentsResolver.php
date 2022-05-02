@@ -17,12 +17,12 @@ class ConstructorArgumentsResolver
 
         try {
             foreach ($constructor->getParameters() as $parameter) {
-                if (!$parameter->getClass()) {
+                if (!$parameter->getType()) {
                     continue;
                 }
                 $constructorArguments[] = [
                     'name' => $parameter->getName(),
-                    'class' => $parameter->getClass()->getName()
+                    'class' => $parameter->getType()->getName()
                 ];
             }
         } catch (\ReflectionException $e) {

@@ -72,10 +72,10 @@ class ConstructorArgumentsResolverTest extends TestCase
             $parameter = $this->createMock(\ReflectionParameter::class);
             $class = null;
             if ($className) {
-                $class = $this->createMock(\ReflectionClass::class);
+                $class = $this->createMock(\ReflectionNamedType::class);
                 $class->method('getName')->willReturn($className);
             }
-            $parameter->method('getClass')->willReturn($class);
+            $parameter->method('getType')->willReturn($class);
             $parameter->method('getName')->willReturn($name);
             $parameters[] = $parameter;
         }
