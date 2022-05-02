@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Olmer\UnitTestsGenerator\Code\Generator;
 
+use Magento\Framework\Code\Generator\DefinedClasses;
+use Magento\Framework\Code\Generator\Io;
+use \Magento\Framework\Code\Generator\CodeGeneratorInterface;
+use Olmer\UnitTestsGenerator\Code\Generator\UnitTest\ConstructorArgumentsResolver;
+use Olmer\UnitTestsGenerator\Code\Generator\UnitTest\SetupMethodBuilder;
+use Olmer\UnitTestsGenerator\Code\Generator\UnitTest\TestObjectCreationBuilder;
+
 class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
 {
     /**
@@ -18,6 +25,34 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
      * @var array
      */
     private $constructorArguments;
+    /**
+     * @var ConstructorArgumentsResolver
+     */
+    private $constructorArgumentsResolver;
+    /**
+     * @var SetupMethodBuilder
+     */
+    private $setupMethodBuilder;
+    /**
+     * @var TestObjectCreationBuilder
+     */
+    private $testObjectCreationBuilder;
+
+    public function __construct(
+        ConstructorArgumentsResolver $constructorArgumentsResolver,
+        SetupMethodBuilder $setupMethodBuilder,
+        TestObjectCreationBuilder $testObjectCreationBuilder,
+        $sourceClassName = null,
+        $resultClassName = null,
+        Io $ioObject = null,
+        CodeGeneratorInterface $classGenerator = null,
+        DefinedClasses $definedClasses = null
+    ) {
+        $this->constructorArgumentsResolver = $constructorArgumentsResolver;
+        $this->setupMethodBuilder = $setupMethodBuilder;
+        $this->testObjectCreationBuilder = $testObjectCreationBuilder;
+        parent::__construct($sourceClassName, $resultClassName, $ioObject, $classGenerator, $definedClasses);
+    }
 
     /**
      * @return \ReflectionClass
@@ -53,10 +88,10 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
                 'visibility' => 'private',
                 'docblock' => [
                     'shortDescription' => "Mock {$e['name']}",
-                    'tags' => [['name' => 'var', 'description' => '\\' . "{$e['class']}|PHPUnit_Framework_MockObject_MockObject"]],
+                    'tags' => [['name' => 'var', 'description' => '\\' . "{$e['class']}|" . \PHPUnit\Framework\MockObject\MockObject::class]],
                 ],
             ];
-        }, $this->getConstructorArgumentsWithFactoryInstances());
+        }, $this->getConstructorArgumentsWithFactoryInstances($this->getConstructorArguments()));
 
         $properties[] = [
             'name' => 'objectManager',
@@ -96,16 +131,16 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
      */
     protected function _getClassMethods()
     {
-        $setUp = [
-            'name' => 'setUp',
-            'parameters' => [],
-            'body' => "\$this->objectManager = new ObjectManager(\$this);\n"
-                . \implode("\n", $this->getSetupMethodParamsDefinition()) . "\n"
-                . $this->getTestObjectCreation(),
-            'docblock' => [
-                'shortDescription' => 'Main set up method',
-            ],
-        ];
+        $setupMethodParamsDefinition = $this->getSetupMethodParamsDefinition(
+            $this->getConstructorArgumentsWithFactoryInstances(
+                $this->getConstructorArguments()
+            )
+        );
+        $testObjectCreationCode = $this->testObjectCreationBuilder->build(
+            $this->getSourceClassName(),
+            $this->getObjectCreationParams($this->getConstructorArguments())
+        );
+        $setUp = $this->setupMethodBuilder->build($setupMethodParamsDefinition, $testObjectCreationCode);
 
         return \array_merge([$setUp], $this->getTestMethodsWithProviders());
     }
@@ -122,12 +157,14 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
     }
 
     /**
+     * @param array $arguments
+     *
      * @return array
      */
-    private function getSetupMethodParamsDefinition(): array
+    private function getSetupMethodParamsDefinition(array $arguments): array
     {
         $result = [];
-        foreach ($this->getConstructorArgumentsWithFactoryInstances() as $argument) {
+        foreach ($arguments as $argument) {
             $result[] = "\$this->{$argument['name']}"
                 . " = \$this->createMock(\\" . "{$argument['class']}::class);";
             if (\preg_match('/\w+Factory$/', $argument['class']) === 1) {
@@ -141,51 +178,46 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
     }
 
     /**
+     * @param string $sourceClassName
+     * @param array $objectCreationParams
+     *
      * @return string
      */
-    private function getTestObjectCreation(): string
-    {
+    private function getTestObjectCreation(
+        string $sourceClassName,
+        array $objectCreationParams
+    ): string {
         return "\$this->testObject = \$this->objectManager->getObject(\n"
-            . $this->getSourceClassName() . "::class,\n"
+            . $sourceClassName . "::class,\n"
             . "    [\n"
-            . \implode("\n", $this->getObjectCreationParams())
+            . \implode("\n", $objectCreationParams)
             . "\n    ]\n"
             . ");";
     }
 
     /**
+     * @param array $constructorArguments
+     *
      * @return array
      */
-    private function getObjectCreationParams(): array
+    private function getObjectCreationParams(array $constructorArguments): array
     {
         return \array_map(function ($e) {
             return "        '{$e['name']}' => \$this->{$e['name']},";
-        }, $this->getConstructorArguments());
+        }, $constructorArguments);
     }
 
     /**
-     * @param string $className
-     *
      * @return array
      */
     private function getConstructorArguments(): array
     {
         if ($this->constructorArguments === null) {
-            $this->constructorArguments = [];
-
             try {
-                $method = $this->getSourceReflectionClass()->getMethod('__construct');
-                foreach ($method->getParameters() as $parameter) {
-                    if (!$parameter->getClass()) {
-                        continue;
-                    }
-                    $this->constructorArguments[] = [
-                        'name' => $parameter->getName(),
-                        'class' => $parameter->getClass()->getName()
-                    ];
-                }
+                $constructor = $this->getSourceReflectionClass()->getMethod('__construct');
+                $this->constructorArguments = $this->constructorArgumentsResolver->resolve($constructor);
             } catch (\ReflectionException $e) {
-                return $this->constructorArguments;
+                $this->constructorArguments = [];
             }
         }
 
@@ -193,12 +225,13 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
     }
 
     /**
+     * @param array $arguments
+     *
      * @return array
      */
-    private function getConstructorArgumentsWithFactoryInstances(): array
+    private function getConstructorArgumentsWithFactoryInstances(array $arguments): array
     {
         $result = [];
-        $arguments = $this->getConstructorArguments();
         foreach ($arguments as $argument) {
             if (\preg_match('/\w+Factory$/', $argument['class']) === 1) {
                 $result[] = [
@@ -311,7 +344,7 @@ BODY;
             \PHPUnit\Framework\TestCase::class
         );
         $this->_classGenerator->addUse(
-            \PHPUnit_Framework_MockObject_MockObject::class
+            \PHPUnit\Framework\MockObject\MockObject::class
         );
     }
 

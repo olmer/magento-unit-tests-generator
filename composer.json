@@ -10,7 +10,10 @@
     ],
     "require": {
         "magento/framework": "*",
-        "php": "^7.0"
+        "php": "^7.0 || ^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9"
     },
     "autoload": {
         "files": [
