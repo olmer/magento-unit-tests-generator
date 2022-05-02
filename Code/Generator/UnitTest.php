@@ -73,7 +73,7 @@ class UnitTest extends \Magento\Framework\Code\Generator\EntityAbstract
                 'visibility' => 'private',
                 'docblock' => [
                     'shortDescription' => "Mock {$e['name']}",
-                    'tags' => [['name' => 'var', 'description' => '\\' . "{$e['class']}|PHPUnit_Framework_MockObject_MockObject"]],
+                    'tags' => [['name' => 'var', 'description' => '\\' . "{$e['class']}|" . \PHPUnit\Framework\MockObject\MockObject::class]],
                 ],
             ];
         }, $this->getConstructorArgumentsWithFactoryInstances());
@@ -319,7 +319,7 @@ BODY;
             \PHPUnit\Framework\TestCase::class
         );
         $this->_classGenerator->addUse(
-            \PHPUnit_Framework_MockObject_MockObject::class
+            \PHPUnit\Framework\MockObject\MockObject::class
         );
     }
 
