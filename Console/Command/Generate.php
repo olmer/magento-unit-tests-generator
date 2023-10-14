@@ -35,6 +35,10 @@ class Generate extends Command
      * @var ObjectManagerFactory
      */
     private $objectManagerFactory;
+    /**
+     * @var mixed
+     */
+    private $model;
 
     /**
      * AbstractCommand constructor.
